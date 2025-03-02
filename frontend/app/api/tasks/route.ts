@@ -47,77 +47,83 @@ const handleApiError = (error: any) => {
   );
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session) {
-      return new NextResponse(
-        JSON.stringify({ message: 'Unauthorized' }),
-        { 
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        }
+    if (!session?.token) {
+      console.log('No session token found');
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
       );
     }
+
+    console.log('Making request to backend with token:', session.token);
 
     const response = await api.get('/tasks', {
       headers: {
-        'Authorization': `Bearer ${session.token}`,
-      }
+        Authorization: `Bearer ${session.token}`,
+      },
     });
 
-    // Log response for debugging
-    console.log('Tasks response:', response.data);
-
-    return NextResponse.json(response.data, {
-      headers: {
-        'Content-Type': 'application/json',
-      }
+    return NextResponse.json(response.data);
+  } catch (error: any) {
+    console.error('Error in tasks API route:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
     });
-  } catch (error) {
-    return handleApiError(error);
+    
+    return NextResponse.json(
+      { 
+        message: error.response?.data?.message || 'Internal Server Error',
+        error: error.message,
+      },
+      { status: error.response?.status || 500 }
+    );
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session) {
-      return new NextResponse(
-        JSON.stringify({ message: 'Unauthorized' }),
-        { 
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        }
+    if (!session?.token) {
+      console.log('No session token found');
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
       );
     }
 
-    const body = await req.json();
-
-    // Validate request body
-    const validatedData = createTaskSchema.parse(body);
-
-    const response = await api.post('/tasks', validatedData, {
-      headers: {
-        'Authorization': `Bearer ${session.token}`,
-      }
+    const data = await request.json();
+    
+    console.log('Making request to backend with data:', {
+      token: session.token,
+      data,
     });
 
-    // Log created task for debugging
-    console.log('Created task:', response.data);
-
-    return NextResponse.json(response.data, {
+    const response = await api.post('/tasks', data, {
       headers: {
-        'Content-Type': 'application/json',
-      }
+        Authorization: `Bearer ${session.token}`,
+      },
     });
-  } catch (error) {
-    return handleApiError(error);
+
+    return NextResponse.json(response.data);
+  } catch (error: any) {
+    console.error('Error in tasks API route:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+    
+    return NextResponse.json(
+      { 
+        message: error.response?.data?.message || 'Internal Server Error',
+        error: error.message,
+      },
+      { status: error.response?.status || 500 }
+    );
   }
 } 

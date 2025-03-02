@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@fullcalendar/daygrid": "^6.1.15",
+    "@fullcalendar/interaction": "^6.1.15",
+    "@fullcalendar/react": "^6.1.15",
+    "@fullcalendar/timegrid": "^6.1.15",
+    "@nestjs/typeorm": "^11.0.0",
+    "next-auth": "^4.24.11",
+    "pg": "^8.13.3",
+    "typeorm": "^0.3.20"
+  }
+}

@@ -1,11 +1,12 @@
-import api, { endpoints, handleApiError } from '@/lib/axios';
+import { clientApi, apiEndpoints, handleApiError } from '@/lib/axios';
 
 export interface Task {
-  id: string;
+  _id: string;
   title: string;
   description?: string;
   status: 'pending' | 'completed' | 'overdue';
-  dueDate: string;
+  startDate: string;
+  endDate: string;
   userId: string;
   createdAt: string;
   updatedAt: string;
@@ -14,20 +15,23 @@ export interface Task {
 export interface CreateTaskData {
   title: string;
   description?: string;
-  dueDate: string;
+  startDate: string;
+  endDate: string;
+  status?: 'pending' | 'completed' | 'overdue';
 }
 
 export interface UpdateTaskData {
   title?: string;
   description?: string;
   status?: 'pending' | 'completed' | 'overdue';
-  dueDate?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 class TaskService {
   async getTasks(): Promise<Task[]> {
     try {
-      const response = await api.get<Task[]>(endpoints.tasks.list);
+      const response = await clientApi.get<Task[]>(apiEndpoints.tasks.list);
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -36,7 +40,7 @@ class TaskService {
 
   async createTask(data: CreateTaskData): Promise<Task> {
     try {
-      const response = await api.post<Task>(endpoints.tasks.create, data);
+      const response = await clientApi.post<Task>(apiEndpoints.tasks.create, data);
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -45,7 +49,7 @@ class TaskService {
 
   async updateTask(id: string, data: UpdateTaskData): Promise<Task> {
     try {
-      const response = await api.patch<Task>(endpoints.tasks.update(id), data);
+      const response = await clientApi.patch<Task>(apiEndpoints.tasks.update(id), data);
       return response.data;
     } catch (error) {
       throw handleApiError(error);
@@ -54,7 +58,7 @@ class TaskService {
 
   async deleteTask(id: string): Promise<void> {
     try {
-      await api.delete(endpoints.tasks.delete(id));
+      await clientApi.delete(apiEndpoints.tasks.delete(id));
     } catch (error) {
       throw handleApiError(error);
     }
@@ -67,12 +71,12 @@ class TaskService {
     upcoming: number;
   }> {
     try {
-      const response = await api.get<{
+      const response = await clientApi.get<{
         pending: number;
         completed: number;
         overdue: number;
         upcoming: number;
-      }>('/tasks/stats');
+      }>(apiEndpoints.tasks.stats);
       return response.data;
     } catch (error) {
       throw handleApiError(error);
