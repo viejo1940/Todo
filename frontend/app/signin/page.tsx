@@ -56,14 +56,24 @@ export default function SignInPage() {
         email: data.email,
         password: data.password,
       });
-      console.log(result)
 
       if (!result?.error) {
         toast.success('Signed in successfully');
         router.push(callbackUrl);
         router.refresh();
       } else {
-        toast.error('Invalid credentials');
+        // Handle specific error cases
+        if (result.error.includes('User not found')) {
+          form.setError('email', { message: 'Email address not found' });
+          toast.error('Email address not found');
+        } else if (result.error.includes('Invalid password')) {
+          form.setError('password', { message: 'Invalid password' });
+          toast.error('Invalid password');
+        } else {
+          form.setError('email', { message: 'Invalid credentials' });
+          form.setError('password', { message: 'Invalid credentials' });
+          toast.error(result.error || 'An error occurred while signing in');
+        }
       }
     } catch (error) {
       toast.error('An error occurred while signing in');

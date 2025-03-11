@@ -1,8 +1,9 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdatePasswordDto } from '../users/dto/update-password.dto';
 import { UserDocument } from '../users/schemas/user.schema';
 
 export interface AuthResponse {
@@ -28,6 +29,11 @@ export class AuthService {
       const user = await this.usersService.validateUser(email, password);
       return user;
     } catch (error) {
+      if (error.message === 'User not found') {
+        throw new UnauthorizedException('Invalid email address');
+      } else if (error.message === 'Invalid password') {
+        throw new UnauthorizedException('Invalid password');
+      }
       throw new UnauthorizedException('Invalid credentials');
     }
   }
@@ -83,5 +89,29 @@ export class AuthService {
       }
       throw error;
     }
+  }
+
+  async changePassword(userId: string, updatePasswordDto: UpdatePasswordDto): Promise<void> {
+    try {
+      await this.usersService.updatePassword(userId, updatePasswordDto);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw new UnauthorizedException(error.message);
+      }
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  // Helper method to generate JWT token
+  private generateToken(user: UserDocument): string {
+    const payload = {
+      sub: user._id,
+      email: user.email,
+      role: user.role,
+    };
+    return this.jwtService.sign(payload);
   }
 } 
